@@ -24,7 +24,15 @@ jobs:
           - arch: x86_64
             gcc: /usr/bin/x86_64-linux-gnu-gcc
             packages: gcc-x86-64-linux-gnu
-
+    outputs:
+      size-aarch64-a: ${{ steps.build.outputs.size_aarch64_a }}
+      size-aarch64-so: ${{ steps.build.outputs.size_aarch64_so }}
+      size-arm-a: ${{ steps.build.outputs.size_arm_a }}
+      size-arm-so: ${{ steps.build.outputs.size_arm_so }}
+      size-mips-a: ${{ steps.build.outputs.size_mips_a }}
+      size-mips-so: ${{ steps.build.outputs.size_mips_so }}
+      size-x86_64-a: ${{ steps.build.outputs.size_x86_64_a }}
+      size-x86_64-so: ${{ steps.build.outputs.size_x86_64_so }}
     steps:
       - name: Checkout libnl-tiny
         uses: actions/checkout@v5
@@ -37,12 +45,48 @@ jobs:
         run: |
           mkdir -p ${GITHUB_WORKSPACE}/build
 
-      - name: Build libnl-tiny
+      - id: build
+        name: Build libnl-tiny
+        env:
+          BUILD_DIR: build/libnl-tiny
         run: |
           cmake \
-            -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.arch }} \
             -DCMAKE_C_COMPILER=${{ matrix.gcc }} \
             -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/build \
-            --install-prefix ${GITHUB_WORKSPACE}/build
-          make
-          make install
+            --install-prefix ${GITHUB_WORKSPACE}/build \
+            -B $BUILD_DIR
+          make -C $BUILD_DIR
+          make -C $BUILD_DIR install
+          echo "size_${{ matrix.arch }}_a=$( find $BUILD_DIR -type f -name libnl-tiny.a -printf '%s' )" >> $GITHUB_OUTPUT
+          echo "size_${{ matrix.arch }}_so=$( find -L $BUILD_DIR -type f -name libnl-tiny.so -printf '%s' )" >> $GITHUB_OUTPUT
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: libnl-tiny-${{ matrix.arch }}-binaries
+          path: |
+            build/libnl-tiny/libnl-tiny.a
+            build/libnl-tiny/libnl-tiny.so
+          if-no-files-found: error
+
+  summary:
+    name: Sizes
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sizes summary
+        env:
+          size_aarch64_a: ${{needs.build.outputs.size-aarch64-a}}
+          size_aarch64_so: ${{needs.build.outputs.size-aarch64-so}}
+          size_arm_a: ${{needs.build.outputs.size-arm-a}}
+          size_arm_so: ${{needs.build.outputs.size-arm-so}}
+          size_mips_a: ${{needs.build.outputs.size-mips-a}}
+          size_mips_so: ${{needs.build.outputs.size-mips-so}}
+          size_x86_64_a: ${{needs.build.outputs.size-x86_64-a}}
+          size_x86_64_so: ${{needs.build.outputs.size-x86_64-so}}
+        run: |
+          echo "### ${GITHUB_WORKFLOW} sizes :floppy_disk:" >> $GITHUB_STEP_SUMMARY
+          echo "| Variant | aarch64 | arm | mips | x86_64 |" >> $GITHUB_STEP_SUMMARY
+          echo "| :---: | :---: | :---: | :---: | :---: |" >> $GITHUB_STEP_SUMMARY
+          echo "| libnl-tiny.a | ${size_aarch64_a} | ${size_arm_a} | ${size_mips_a} | ${size_x86_64_a} |" >> $GITHUB_STEP_SUMMARY
+          echo "| libnl-tiny.so | ${size_aarch64_so} | ${size_arm_so} | ${size_mips_so} | ${size_x86_64_so} |" >> $GITHUB_STEP_SUMMARY
