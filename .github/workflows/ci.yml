@@ -21,6 +21,9 @@ jobs:
           - arch: mips
             gcc: /usr/bin/mips-linux-gnu-gcc
             packages: gcc-mips-linux-gnu
+          - arch: powerpc
+            gcc: /usr/bin/powerpc-linux-gnu-gcc
+            packages: gcc-powerpc-linux-gnu
           - arch: x86_64
             gcc: /usr/bin/x86_64-linux-gnu-gcc
             packages: gcc-x86-64-linux-gnu
@@ -31,6 +34,8 @@ jobs:
       size-arm-so: ${{ steps.build.outputs.size_arm_so }}
       size-mips-a: ${{ steps.build.outputs.size_mips_a }}
       size-mips-so: ${{ steps.build.outputs.size_mips_so }}
+      size-powerpc-a: ${{ steps.build.outputs.size_powerpc_a }}
+      size-powerpc-so: ${{ steps.build.outputs.size_powerpc_so }}
       size-x86_64-a: ${{ steps.build.outputs.size_x86_64_a }}
       size-x86_64-so: ${{ steps.build.outputs.size_x86_64_so }}
     steps:
@@ -83,11 +88,13 @@ jobs:
           size_arm_so: ${{needs.build.outputs.size-arm-so}}
           size_mips_a: ${{needs.build.outputs.size-mips-a}}
           size_mips_so: ${{needs.build.outputs.size-mips-so}}
+          size_powerpc_a: ${{needs.build.outputs.size-powerpc-a}}
+          size_powerpc_so: ${{needs.build.outputs.size-powerpc-so}}
           size_x86_64_a: ${{needs.build.outputs.size-x86_64-a}}
           size_x86_64_so: ${{needs.build.outputs.size-x86_64-so}}
         run: |
           echo "### ${GITHUB_WORKFLOW} sizes :floppy_disk:" >> $GITHUB_STEP_SUMMARY
-          echo "| Variant | aarch64 | arm | mips | x86_64 |" >> $GITHUB_STEP_SUMMARY
-          echo "| :---: | :---: | :---: | :---: | :---: |" >> $GITHUB_STEP_SUMMARY
-          echo "| libnl-tiny.a | ${size_aarch64_a} | ${size_arm_a} | ${size_mips_a} | ${size_x86_64_a} |" >> $GITHUB_STEP_SUMMARY
-          echo "| libnl-tiny.so | ${size_aarch64_so} | ${size_arm_so} | ${size_mips_so} | ${size_x86_64_so} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Variant | aarch64 | arm | mips | powerpc | x86_64 |" >> $GITHUB_STEP_SUMMARY
+          echo "| :---: | :---: | :---: | :---: | :---: | :---: |" >> $GITHUB_STEP_SUMMARY
+          echo "| libnl-tiny.a | ${size_aarch64_a} | ${size_arm_a} | ${size_mips_a} | ${size_powerpc_a} | ${size_x86_64_a} |" >> $GITHUB_STEP_SUMMARY
+          echo "| libnl-tiny.so | ${size_aarch64_so} | ${size_arm_so} | ${size_mips_so} | ${size_powerpc_so} | ${size_x86_64_so} |" >> $GITHUB_STEP_SUMMARY
