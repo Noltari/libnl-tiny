@@ -55,7 +55,7 @@ jobs:
             -DCMAKE_C_COMPILER=${{ matrix.gcc }} \
             -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/build \
             --install-prefix ${GITHUB_WORKSPACE}/build \
-            -B $BUILD_DIR
+            -B $BUILD_DIR -S .
           make -C $BUILD_DIR
           make -C $BUILD_DIR install
           echo "size_${{ matrix.arch }}_a=$( find $BUILD_DIR -type f -name libnl-tiny.a -printf '%s' )" >> $GITHUB_OUTPUT
